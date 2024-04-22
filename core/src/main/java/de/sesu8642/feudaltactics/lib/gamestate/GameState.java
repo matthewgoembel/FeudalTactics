@@ -4,8 +4,10 @@ package de.sesu8642.feudaltactics.lib.gamestate;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Queue;
 
 import com.badlogic.gdx.math.Vector2;
 
@@ -24,6 +26,9 @@ public class GameState {
 	private MapObject heldObject = null;
 	private Intelligence botIntelligence = Intelligence.LEVEL_1;
 	private Long seed;
+
+	private Queue<String> combatLog = new LinkedList<>();
+	private Queue<String> combatLogStageLog = new LinkedList<>();
 
 	/** A round consists of one turn per player. */
 	private int round = 0;
@@ -107,6 +112,22 @@ public class GameState {
 		this.seed = seed;
 	}
 
+	public Queue<String> getCombatLog() {
+		return combatLog;
+	}
+
+	public void setCombatLog(Queue<String> combatLog) {
+		this.combatLog = combatLog;
+	}
+
+	public Queue<String> getCombatLogStageLog() {
+		return combatLogStageLog;
+	}
+
+	public void setCombatLogStageLog(Queue<String> combatLogStageLog) {
+		this.combatLogStageLog = combatLogStageLog;
+	}
+
 	public int getRound() {
 		return round;
 	}
@@ -120,7 +141,7 @@ public class GameState {
 		// calculating with enum strings because the hashcode must be consistent across
 		// runs
 		return Objects.hash(activeKingdom, botIntelligence.toString(), heldObject, kingdoms, map, playerTurn, players,
-				round, seed, winner);
+				round, seed, winner, combatLog);
 	}
 
 	@Override
@@ -139,7 +160,8 @@ public class GameState {
 				&& Objects.equals(heldObject, other.heldObject) && Objects.equals(kingdoms, other.kingdoms)
 				&& Objects.equals(map, other.map) && playerTurn == other.playerTurn
 				&& Objects.equals(players, other.players) && round == other.round && Objects.equals(seed, other.seed)
-				&& Objects.equals(winner, other.winner);
+				&& Objects.equals(winner, other.winner)
+				&& Objects.equals(combatLog, other.combatLog);
 	}
 
 }

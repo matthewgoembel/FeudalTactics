@@ -82,6 +82,7 @@ public class IngameScreen extends GameScreen {
 	private ParameterInputStage parameterInputStage;
 	private static HudStage hudStage;
 	private MenuStage menuStage;
+	private CombatLogStage combatLogStage;
 
 	private DialogFactory dialogFactory;
 
@@ -112,7 +113,7 @@ public class IngameScreen extends GameScreen {
 
 	/** Stages that can be displayed. */
 	public enum IngameStages {
-		PARAMETERS, HUD, MENU
+		PARAMETERS, HUD, MENU, LOG
 	}
 
 	// current speed that the enemy turns are displayed in
@@ -137,6 +138,7 @@ public class IngameScreen extends GameScreen {
 	 *                             processors
 	 * @param hudStage             stage for heads up display UI
 	 * @param menuStage            stage for the pause menu UI
+	 * @param combatLogStage	   stage for the combat log UI
 	 * @param parameterInputStage  stage for the new game parameter input UI
 	 */
 	@Inject
@@ -146,7 +148,7 @@ public class IngameScreen extends GameScreen {
 			@IngameRenderer MapRenderer mapRenderer, DialogFactory confirmDialogFactory, EventBus eventBus,
 			CombinedInputProcessor inputProcessor, FeudalTacticsGestureDetector gestureDetector,
 			InputMultiplexer inputMultiplexer, HudStage hudStage, IngameMenuStage menuStage,
-			ParameterInputStage parameterInputStage) {
+			CombatLogStage combatLogStage, ParameterInputStage parameterInputStage) {
 		super(ingameCamera, viewport, hudStage);
 		this.textureAtlas = textureAtlas;
 		this.autoSaveRepo = autoSaveRepo;
@@ -161,6 +163,7 @@ public class IngameScreen extends GameScreen {
 		this.inputProcessor = inputProcessor;
 		this.hudStage = hudStage;
 		this.menuStage = menuStage;
+		this.combatLogStage = combatLogStage;
 		this.parameterInputStage = parameterInputStage;
 		addIngameMenuListeners();
 		addParameterInputListeners();
@@ -319,7 +322,10 @@ public class IngameScreen extends GameScreen {
 				uiChangeActions.add(() -> hudStage.showEnemyTurnButtons());
 			}
 		}
+
 		hudStage.setInfoText(infoText);
+		hudStage.setCombatLogText(newGameState.getCombatLog());
+		combatLogStage.setCombatLogText(newGameState.getCombatLogStageLog());
 		parameterInputStage.updateSeed(newGameState.getSeed());
 	}
 
@@ -329,6 +335,15 @@ public class IngameScreen extends GameScreen {
 			activateStage(IngameStages.HUD);
 		} else if (getActiveStage() == hudStage) {
 			activateStage(IngameStages.MENU);
+		}
+	}
+
+	/** Toggles the combat log screen */
+	public void toggleCombatLogStage() {
+		if (getActiveStage() == combatLogStage) {
+			activateStage(IngameStages.HUD);
+		} else if (getActiveStage() == hudStage) {
+			activateStage(IngameStages.LOG);
 		}
 	}
 
@@ -453,6 +468,11 @@ public class IngameScreen extends GameScreen {
 			inputMultiplexer.addProcessor(inputProcessor);
 			setActiveStage(parameterInputStage);
 			break;
+		case LOG:
+			inputMultiplexer.addProcessor(combatLogStage);
+			inputMultiplexer.addProcessor(inputProcessor);
+			setActiveStage(combatLogStage);
+			break;
 		default:
 			throw new IllegalStateException("Unknown stage " + ingameStage);
 		}
@@ -486,6 +506,7 @@ public class IngameScreen extends GameScreen {
 		parameterInputStage.dispose();
 		hudStage.dispose();
 		menuStage.dispose();
+		combatLogStage.dispose();
 		// might try to dispose the same stage twice
 		super.dispose();
 	}
@@ -584,6 +605,10 @@ public class IngameScreen extends GameScreen {
 
 	public MenuStage getMenuStage() {
 		return menuStage;
+	}
+
+	public CombatLogStage getCombatLogStage() {
+		return combatLogStage;
 	}
 
 }

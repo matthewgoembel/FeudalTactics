@@ -11,6 +11,7 @@ import de.sesu8642.feudaltactics.events.CenterMapUIEvent;
 import de.sesu8642.feudaltactics.events.GameResumedEvent;
 import de.sesu8642.feudaltactics.events.GameStateChangeEvent;
 import de.sesu8642.feudaltactics.events.input.EscInputEvent;
+import de.sesu8642.feudaltactics.events.input.GraveAccentEvent;
 import de.sesu8642.feudaltactics.events.moves.GameStartEvent;
 import de.sesu8642.feudaltactics.ingame.ui.IngameScreen.IngameStages;
 
@@ -37,6 +38,16 @@ public class IngameScreenEventHandler {
 	@Subscribe
 	public void handleEscInput(EscInputEvent event) {
 		ingameScreen.togglePause();
+	}
+
+	/**
+	 * Event handler for GRAVE-ACCENT key events.
+	 * 
+	 * @param event event to handle
+	 */
+	@Subscribe
+	public void handleGraveAccentInput(GraveAccentEvent event) {
+		ingameScreen.toggleCombatLogStage();
 	}
 
 	/**
