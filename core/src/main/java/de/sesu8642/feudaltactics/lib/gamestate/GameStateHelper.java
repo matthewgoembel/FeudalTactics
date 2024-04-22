@@ -412,6 +412,7 @@ public class GameStateHelper {
 		gameState.setActiveKingdom(kingdom);
 	}
 
+
 	/**
 	 * Picks up an object.
 	 * 
@@ -472,6 +473,17 @@ public class GameStateHelper {
 		gameState.setHeldObject(newUnit);
 		placeObject(gameState, tile);
 	}
+
+
+	public static Kingdom getPlayerKingdom(GameState gameState, Player player) {
+        for (Kingdom kingdom : gameState.getKingdoms()) {
+            if (kingdom.getPlayer().equals(player)) {
+                return kingdom;
+            }
+        }
+        return null; // Or handle the case when no kingdom is found for the player
+    }
+
 
 	/**
 	 * Conquers an enemy tile.
@@ -578,6 +590,7 @@ public class GameStateHelper {
 		gameState.setHeldObject(null);
 	}
 
+	
 	private static void combineKingdoms(GameState gameState, Kingdom masterKingdom, Kingdom slaveKingdom) {
 		// master kingdom will determine the new capital
 		masterKingdom.setSavings(masterKingdom.getSavings() + slaveKingdom.getSavings());
@@ -973,6 +986,24 @@ public class GameStateHelper {
 			}
 		}
 		return false;
+	}
+
+    /**
+     * Determines whether a player's units are at risk due to negative salary.
+     * 
+     * @param gameState game state of the current game
+     * @param player    player attempting the action
+     * @return true if player's units are at risk, false otherwise
+     */
+    public static boolean arePlayerUnitsAtRisk(GameState gameState, Player player) {
+        Kingdom activeKingdom = gameState.getActiveKingdom();
+		int income = GameStateHelper.getKingdomIncome(activeKingdom);
+        int salaries = GameStateHelper.getKingdomSalaries(gameState, activeKingdom);
+        int result = income - salaries;
+        if (result < 0) {
+            return true;
+        }
+        return false;
 	}
 
 	/**

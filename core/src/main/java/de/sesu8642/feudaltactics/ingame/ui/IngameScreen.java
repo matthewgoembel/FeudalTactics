@@ -80,7 +80,7 @@ public class IngameScreen extends GameScreen {
 	private final FeudalTacticsGestureDetector gestureDetector;
 
 	private ParameterInputStage parameterInputStage;
-	private HudStage hudStage;
+	private static HudStage hudStage;
 	private MenuStage menuStage;
 
 	private DialogFactory dialogFactory;
@@ -179,11 +179,16 @@ public class IngameScreen extends GameScreen {
 					"You might have forgotten to do your moves for a kingdom.\nAre you sure you want to end your turn?\n",
 					this::endHumanPlayerTurn);
 			confirmDialog.show(hudStage);
+		} else if (GameStateHelper.arePlayerUnitsAtRisk(cachedGameState, winnerBeforeBotTurn)) {
+			Dialog confirmDialog = dialogFactory.createConfirmDialog(
+					"Your kingdom salary is negative, your units may die upon ending your turn.\nAre you sure you want to end your turn?\n",
+					this::endHumanPlayerTurn);
+					confirmDialog.show(hudStage);
 		} else {
 			endHumanPlayerTurn();
 		}
 	}
-
+	
 	private void endHumanPlayerTurn() {
 		winnerBeforeBotTurn = cachedGameState.getWinner();
 		// isLocalPlayerTurn needs to be set here because if the bot turns are not
@@ -214,6 +219,25 @@ public class IngameScreen extends GameScreen {
 		cachedGameState = null;
 		winnerBeforeBotTurn = null;
 		isSpectateMode = false;
+	}
+
+	/**
+	 * Displays the non-local player kingdom information to the UI
+	 * 
+	 * @param gameState new game state
+	 * @param kingdom the clicked kingdom
+	 */
+	public static void displayBotAiStatistics(GameState gameState, Kingdom kingdom) {
+		int income = GameStateHelper.getKingdomIncome(kingdom);
+		int salaries = GameStateHelper.getKingdomSalaries(gameState, kingdom);
+		int result = income - salaries;
+		int savings = kingdom.getSavings();
+		int tiles = kingdom.getTiles().size();
+		String kingdomColor = kingdom.getPlayer().getColorName();
+		String resultText = result < 0 ? String.valueOf(result) : "+" + result;
+		String botAIInfo = "Enemy Kingdom " + kingdomColor + ":\nSavings: " + savings + " (" 
+							+ resultText + ")" + "\nKingdom Size: " + tiles + " tiles";
+		hudStage.setInfoText(botAIInfo);
 	}
 
 	/**
@@ -249,8 +273,9 @@ public class IngameScreen extends GameScreen {
 				int salaries = GameStateHelper.getKingdomSalaries(newGameState, kingdom);
 				int result = income - salaries;
 				int savings = kingdom.getSavings();
+				int tiles = kingdom.getTiles().size();
 				String resultText = result < 0 ? String.valueOf(result) : "+" + result;
-				infoText = "Savings: " + savings + " (" + resultText + ")";
+				infoText = "Savings: " + savings + " (" + resultText + ")" + "\nKingdom Size: " + tiles + " tiles";
 			} else {
 				infoText = "Your turn";
 			}
@@ -269,6 +294,7 @@ public class IngameScreen extends GameScreen {
 				boolean canBuyCastle = InputValidationHelper.checkBuyObject(newGameState, player, Castle.class);
 				boolean canEndTurn = InputValidationHelper.checkEndTurn(newGameState, player);
 				hudStage.setActiveTurnButtonEnabledStatus(canUndo, canBuyPeasant, canBuyCastle, canEndTurn);
+				
 			}
 			// display messages
 			if (newGameState.getPlayers().stream().filter(player -> !player.isDefeated()).count() == 1) {
