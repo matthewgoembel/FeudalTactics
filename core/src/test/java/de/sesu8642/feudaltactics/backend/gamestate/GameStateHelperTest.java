@@ -3,6 +3,8 @@
 package de.sesu8642.feudaltactics.backend.gamestate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
@@ -47,6 +49,59 @@ class GameStateHelperTest {
 
 		assertEquals(original, copy);
 	}
+
+	@Test 
+	void addToCombatLog() {
+		GameState original = new GameState();
+		String test = "testing";
+		GameStateHelper.addToCombatLog(original, test);
+
+		assertTrue(original.getCombatLog().size() == 1);
+		assertEquals(original.getCombatLog().peek(), test);
+
+		assertFalse(original.getCombatLog().size() > 1);
+		assertNotEquals(original.getCombatLog().peek(), "test");
+	}
+
+	@Test 
+	void addToCombatLogStageLog() {
+		GameState original = new GameState();
+		String test = "testing";
+		GameStateHelper.addToCombatLog(original, test);
+
+		assertTrue(original.getCombatLogStageLog().size() == 1);
+		assertEquals(original.getCombatLogStageLog().peek(), test);
+
+		assertFalse(original.getCombatLogStageLog().size() > 1);
+		assertNotEquals(original.getCombatLogStageLog().peek(), "test");
+	}
+
+	@Test
+	void addMultipleLinesToCombatLog() {
+		GameState original = new GameState();
+		String test = "testing";
+		
+		for (int i = 0; i < 10; i++) {
+			GameStateHelper.addToCombatLog(original, test);
+		}
+
+		assertEquals(original.getCombatLog().size(), 8);
+		assertNotEquals(original.getCombatLog().size(), 10);
+	}
+
+	@Test
+	void addMultipleLinesToCombatLogStageLog() {
+		GameState original = new GameState();
+		String test = "testing";
+
+		for (int i = 0; i < 10; i++) {
+			GameStateHelper.addToCombatLog(original, test);
+		}
+
+		assertEquals(original.getCombatLogStageLog().size(), 10);
+		assertNotEquals(original.getCombatLogStageLog().size(), 8);
+	}
+
 
 	@ParameterizedTest
 	@MethodSource("provideMapSizesAndSeeds")

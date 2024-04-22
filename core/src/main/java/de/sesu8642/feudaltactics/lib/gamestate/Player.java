@@ -78,6 +78,41 @@ public class Player {
         return colorToName.getOrDefault(color, "Unknown");
 	}
 
+	public String getColorAsString() {
+		final Color blue = new Color(0.2F, 0.45F, 0.8F, 1);
+		final Color orange = new Color(0.75F, 0.5F, 0F, 1);
+		final Color pink = new Color(1F, 0.67F, 0.67F, 1);
+		final Color yellow = new Color(1F, 1F, 0F, 1);
+		final Color white = new Color(1F, 1F, 1F, 1);
+		final Color green = new Color(0F, 1F, 0F, 1);
+		final Color[] color_bank = { blue, orange, pink, yellow, white, green };
+		String c = "";
+		for (int i = 0; i < color_bank.length; i++){
+			if (color_bank[i].equals(color)) 
+				switch(i) {
+					case 0: c = "Blue";
+							break;
+					
+					case 1: c = "Orange";
+							break;
+					
+					case 2: c = "Pink";
+							break;
+					
+					case 3: c = "Yellow";
+							break;
+					
+					case 4: c = "White";
+							break;
+					
+					case 5: c = "Green";
+							break;
+				}
+		}
+
+		return c;
+	}
+
 	/**
 	 * Returns a deep copy of the original. Exception: color field is the same
 	 * instance as the original one

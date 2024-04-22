@@ -18,6 +18,7 @@ import com.google.common.eventbus.EventBus;
 import de.sesu8642.feudaltactics.events.TapInputEvent;
 import de.sesu8642.feudaltactics.events.input.BackInputEvent;
 import de.sesu8642.feudaltactics.events.input.EscInputEvent;
+import de.sesu8642.feudaltactics.events.input.GraveAccentEvent;
 import de.sesu8642.feudaltactics.events.moves.BuyAndPlaceCastleEvent;
 import de.sesu8642.feudaltactics.events.moves.BuyCastleEvent;
 import de.sesu8642.feudaltactics.events.moves.BuyPeasantEvent;
@@ -153,6 +154,8 @@ public class CombinedInputProcessor implements GestureListener, InputProcessor {
 		case Keys.BACK:
 			eventBus.post(new BackInputEvent());
 			break;
+		case Keys.GRAVE:
+			eventBus.post(new GraveAccentEvent());
 		default:
 			// noop: ignore all other keys
 		}

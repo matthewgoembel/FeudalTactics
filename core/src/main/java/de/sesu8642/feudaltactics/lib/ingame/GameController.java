@@ -31,6 +31,7 @@ import de.sesu8642.feudaltactics.ingame.ui.IngameScreen;
 public class GameController {
 
 	private final Logger logger = LoggerFactory.getLogger(this.getClass().getName());
+	//public static Queue<String> combatLog = new Queue<>();
 
 	/** All colors available to bots and user in the game. */
 	public static final Color BLUE = new Color(0.2F, 0.45F, 0.8F, 1);
@@ -205,6 +206,7 @@ public class GameController {
 	 */
 	public void placeOwn(HexTile tile) {
 		logger.debug("placing held object on own {}", tile);
+		GameStateHelper.addToCombatLog(gameState, gameState.getActivePlayer().getColorAsString() + " placing held object on own tile: " + tile.getPosition());
 		GameStateHelper.placeOwn(gameState, tile);
 		autosave();
 		eventBus.post(new GameStateChangeEvent(gameState));
@@ -217,6 +219,7 @@ public class GameController {
 	 */
 	public void combineUnits(HexTile tile) {
 		logger.debug("combining held unit with unit on {}", tile);
+		GameStateHelper.addToCombatLog(gameState, gameState.getActivePlayer().getColorAsString() + " combining held unit with unit on tile: " + tile.getPosition());
 		GameStateHelper.combineUnits(gameState, tile);
 		autosave();
 		eventBus.post(new GameStateChangeEvent(gameState));
@@ -229,6 +232,7 @@ public class GameController {
 	 */
 	public void conquer(HexTile tile) {
 		logger.debug("conquering {}", tile);
+		GameStateHelper.addToCombatLog(gameState, gameState.getActivePlayer().getColorAsString() + " conquering " + tile.getPlayer().getColorAsString() + " tile " + tile.getPosition());
 		GameStateHelper.conquer(gameState, tile);
 		autosave();
 		eventBus.post(new GameStateChangeEvent(gameState));
@@ -239,6 +243,7 @@ public class GameController {
 	 */
 	public void endTurn() {
 		logger.debug("ending turn of {}", gameState.getActivePlayer());
+		GameStateHelper.addToCombatLog(gameState, "Ending turn of " + gameState.getActivePlayer().getColorAsString());
 		// update gameState
 		gameState = GameStateHelper.endTurn(gameState);
 		if (gameState.getActivePlayer().getType() == Type.LOCAL_BOT) {

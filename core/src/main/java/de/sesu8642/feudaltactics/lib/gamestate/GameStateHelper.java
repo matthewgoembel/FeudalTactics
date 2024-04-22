@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -99,6 +100,14 @@ public class GameStateHelper {
 
 		if (original.getSeed() != null) {
 			result.setSeed(original.getSeed());
+		}
+
+		if (original.getCombatLog() != null) {
+			result.setCombatLog(original.getCombatLog());
+		}
+
+		if (original.getCombatLogStageLog() != null) {
+			result.setCombatLogStageLog(original.getCombatLogStageLog());
 		}
 
 		result.setRound(original.getRound());
@@ -855,6 +864,7 @@ public class GameStateHelper {
 	 */
 	public static void buyCastle(GameState gameState) {
 		gameState.getActiveKingdom().setSavings(gameState.getActiveKingdom().getSavings() - Castle.COST);
+		addToCombatLog(gameState, gameState.getActivePlayer().getColorAsString() + " buying a castle");
 		gameState.setHeldObject(new Castle());
 	}
 
@@ -1004,6 +1014,31 @@ public class GameStateHelper {
             return true;
         }
         return false;
+	}
+
+	/**
+	 * Adds combat-related moves performed by the player and bots to a combat log
+	 * 
+	 * @param gameState GameState to analyze
+	 * @param text text to be added to combat log
+	 */
+	public static void addToCombatLog(GameState gameState, String text) {
+		Queue<String> log1 = gameState.getCombatLog();
+		Queue<String> log2 = gameState.getCombatLogStageLog();
+		
+		log1.add(text);
+		log2.add(text);
+
+		if (log1.size() >= 9) {
+			log1.poll();
+		}
+
+		if (log2.size() >= 33) {
+			log2.poll();
+		}
+
+		gameState.setCombatLog(log1);
+		gameState.setCombatLogStageLog(log2);
 	}
 
 	/**
