@@ -80,8 +80,9 @@ public class IngameScreen extends GameScreen {
 	private final FeudalTacticsGestureDetector gestureDetector;
 
 	private ParameterInputStage parameterInputStage;
-	private HudStage hudStage;
+	private static HudStage hudStage;
 	private MenuStage menuStage;
+	private CombatLogStage combatLogStage;
 
 	private DialogFactory dialogFactory;
 
@@ -112,7 +113,7 @@ public class IngameScreen extends GameScreen {
 
 	/** Stages that can be displayed. */
 	public enum IngameStages {
-		PARAMETERS, HUD, MENU
+		PARAMETERS, HUD, MENU, LOG
 	}
 
 	// current speed that the enemy turns are displayed in
@@ -137,6 +138,7 @@ public class IngameScreen extends GameScreen {
 	 *                             processors
 	 * @param hudStage             stage for heads up display UI
 	 * @param menuStage            stage for the pause menu UI
+	 * @param combatLogStage	   stage for the combat log UI
 	 * @param parameterInputStage  stage for the new game parameter input UI
 	 */
 	@Inject
@@ -146,7 +148,7 @@ public class IngameScreen extends GameScreen {
 			@IngameRenderer MapRenderer mapRenderer, DialogFactory confirmDialogFactory, EventBus eventBus,
 			CombinedInputProcessor inputProcessor, FeudalTacticsGestureDetector gestureDetector,
 			InputMultiplexer inputMultiplexer, HudStage hudStage, IngameMenuStage menuStage,
-			ParameterInputStage parameterInputStage) {
+			CombatLogStage combatLogStage, ParameterInputStage parameterInputStage) {
 		super(ingameCamera, viewport, hudStage);
 		this.textureAtlas = textureAtlas;
 		this.autoSaveRepo = autoSaveRepo;
@@ -161,6 +163,7 @@ public class IngameScreen extends GameScreen {
 		this.inputProcessor = inputProcessor;
 		this.hudStage = hudStage;
 		this.menuStage = menuStage;
+		this.combatLogStage = combatLogStage;
 		this.parameterInputStage = parameterInputStage;
 		addIngameMenuListeners();
 		addParameterInputListeners();
@@ -179,11 +182,16 @@ public class IngameScreen extends GameScreen {
 					"You might have forgotten to do your moves for a kingdom.\nAre you sure you want to end your turn?\n",
 					this::endHumanPlayerTurn);
 			confirmDialog.show(hudStage);
+		} else if (GameStateHelper.arePlayerUnitsAtRisk(cachedGameState, winnerBeforeBotTurn)) {
+			Dialog confirmDialog = dialogFactory.createConfirmDialog(
+					"Your kingdom salary is negative, your units may die upon ending your turn.\nAre you sure you want to end your turn?\n",
+					this::endHumanPlayerTurn);
+					confirmDialog.show(hudStage);
 		} else {
 			endHumanPlayerTurn();
 		}
 	}
-
+	
 	private void endHumanPlayerTurn() {
 		winnerBeforeBotTurn = cachedGameState.getWinner();
 		// isLocalPlayerTurn needs to be set here because if the bot turns are not
@@ -198,7 +206,8 @@ public class IngameScreen extends GameScreen {
 		eventBus.post(new RegenerateMapEvent(parameterInputStage.getBotIntelligence(),
 				new MapParameters(parameterInputStage.getSeedParam(),
 						parameterInputStage.getMapSizeParam().getAmountOfTiles(),
-						parameterInputStage.getMapDensityParam().getDensityFloat())));
+						parameterInputStage.getMapDensityParam().getDensityFloat(),
+						parameterInputStage.getUserColor().getKingdomColor())));
 		centerMap();
 		activateStage(IngameStages.PARAMETERS);
 	}
@@ -213,6 +222,25 @@ public class IngameScreen extends GameScreen {
 		cachedGameState = null;
 		winnerBeforeBotTurn = null;
 		isSpectateMode = false;
+	}
+
+	/**
+	 * Displays the non-local player kingdom information to the UI
+	 * 
+	 * @param gameState new game state
+	 * @param kingdom the clicked kingdom
+	 */
+	public static void displayBotAiStatistics(GameState gameState, Kingdom kingdom) {
+		int income = GameStateHelper.getKingdomIncome(kingdom);
+		int salaries = GameStateHelper.getKingdomSalaries(gameState, kingdom);
+		int result = income - salaries;
+		int savings = kingdom.getSavings();
+		int tiles = kingdom.getTiles().size();
+		String kingdomColor = kingdom.getPlayer().getColorName();
+		String resultText = result < 0 ? String.valueOf(result) : "+" + result;
+		String botAIInfo = "Enemy Kingdom " + kingdomColor + ":\nSavings: " + savings + " (" 
+							+ resultText + ")" + "\nKingdom Size: " + tiles + " tiles";
+		hudStage.setInfoText(botAIInfo);
 	}
 
 	/**
@@ -248,8 +276,9 @@ public class IngameScreen extends GameScreen {
 				int salaries = GameStateHelper.getKingdomSalaries(newGameState, kingdom);
 				int result = income - salaries;
 				int savings = kingdom.getSavings();
+				int tiles = kingdom.getTiles().size();
 				String resultText = result < 0 ? String.valueOf(result) : "+" + result;
-				infoText = "Savings: " + savings + " (" + resultText + ")";
+				infoText = "Savings: " + savings + " (" + resultText + ")" + "\nKingdom Size: " + tiles + " tiles";
 			} else {
 				infoText = "Your turn";
 			}
@@ -268,6 +297,7 @@ public class IngameScreen extends GameScreen {
 				boolean canBuyCastle = InputValidationHelper.checkBuyObject(newGameState, player, Castle.class);
 				boolean canEndTurn = InputValidationHelper.checkEndTurn(newGameState, player);
 				hudStage.setActiveTurnButtonEnabledStatus(canUndo, canBuyPeasant, canBuyCastle, canEndTurn);
+				
 			}
 			// display messages
 			if (newGameState.getPlayers().stream().filter(player -> !player.isDefeated()).count() == 1) {
@@ -292,7 +322,10 @@ public class IngameScreen extends GameScreen {
 				uiChangeActions.add(() -> hudStage.showEnemyTurnButtons());
 			}
 		}
+
 		hudStage.setInfoText(infoText);
+		hudStage.setCombatLogText(newGameState.getCombatLog());
+		combatLogStage.setCombatLogText(newGameState.getCombatLogStageLog());
 		parameterInputStage.updateSeed(newGameState.getSeed());
 	}
 
@@ -302,6 +335,15 @@ public class IngameScreen extends GameScreen {
 			activateStage(IngameStages.HUD);
 		} else if (getActiveStage() == hudStage) {
 			activateStage(IngameStages.MENU);
+		}
+	}
+
+	/** Toggles the combat log screen */
+	public void toggleCombatLogStage() {
+		if (getActiveStage() == combatLogStage) {
+			activateStage(IngameStages.HUD);
+		} else if (getActiveStage() == hudStage) {
+			activateStage(IngameStages.LOG);
 		}
 	}
 
@@ -426,6 +468,11 @@ public class IngameScreen extends GameScreen {
 			inputMultiplexer.addProcessor(inputProcessor);
 			setActiveStage(parameterInputStage);
 			break;
+		case LOG:
+			inputMultiplexer.addProcessor(combatLogStage);
+			inputMultiplexer.addProcessor(inputProcessor);
+			setActiveStage(combatLogStage);
+			break;
 		default:
 			throw new IllegalStateException("Unknown stage " + ingameStage);
 		}
@@ -459,6 +506,7 @@ public class IngameScreen extends GameScreen {
 		parameterInputStage.dispose();
 		hudStage.dispose();
 		menuStage.dispose();
+		combatLogStage.dispose();
 		// might try to dispose the same stage twice
 		super.dispose();
 	}
@@ -486,16 +534,18 @@ public class IngameScreen extends GameScreen {
 				() -> parameterInputStage.seedTextField.setText(String.valueOf(System.currentTimeMillis()))));
 
 		Stream.of(parameterInputStage.seedTextField, parameterInputStage.randomButton, parameterInputStage.sizeSelect,
-				parameterInputStage.densitySelect)
+				parameterInputStage.densitySelect, parameterInputStage.colorSelect)
 				.forEach(actor -> actor.addListener(new ExceptionLoggingChangeListener(() -> {
 					eventBus.post(new RegenerateMapEvent(parameterInputStage.getBotIntelligence(),
 							new MapParameters(parameterInputStage.getSeedParam(),
 									parameterInputStage.getMapSizeParam().getAmountOfTiles(),
-									parameterInputStage.getMapDensityParam().getDensityFloat())));
+									parameterInputStage.getMapDensityParam().getDensityFloat(),
+									parameterInputStage.getUserColor().getKingdomColor())));
 					centerMap();
 					newGamePrefDao
 							.saveNewGamePreferences(new NewGamePreferences(parameterInputStage.getBotIntelligence(),
-									parameterInputStage.getMapSizeParam(), parameterInputStage.getMapDensityParam()));
+									parameterInputStage.getMapSizeParam(), parameterInputStage.getMapDensityParam(),
+									parameterInputStage.getUserColor()));
 				})));
 
 		parameterInputStage.playButton
@@ -555,6 +605,10 @@ public class IngameScreen extends GameScreen {
 
 	public MenuStage getMenuStage() {
 		return menuStage;
+	}
+
+	public CombatLogStage getCombatLogStage() {
+		return combatLogStage;
 	}
 
 }

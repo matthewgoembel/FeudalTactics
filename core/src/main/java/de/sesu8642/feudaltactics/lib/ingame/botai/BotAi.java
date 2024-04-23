@@ -313,6 +313,7 @@ public class BotAi {
 	private boolean acquirePeasant(GameState gameState, Kingdom kingdom, PickedUpUnits pickedUpUnits) {
 		if (canKingdomSustainNewUnit(gameState, kingdom, pickedUpUnits, UnitTypes.PEASANT)) {
 			buyUnitDirectly(kingdom, pickedUpUnits, UnitTypes.PEASANT);
+			GameStateHelper.addToCombatLog(gameState, gameState.getActivePlayer().getColorAsString() + " acquiring a peasant");
 			return true;
 		}
 		return false;
@@ -323,6 +324,7 @@ public class BotAi {
 			// combine 2 existing peasants
 			pickedUpUnits.removeUnit(UnitTypes.PEASANT, 2);
 			pickedUpUnits.addUnit(UnitTypes.SPEARMAN);
+			GameStateHelper.addToCombatLog(gameState, gameState.getActivePlayer().getColorAsString() + " acquiring a spearman");
 			return true;
 		} else if (pickedUpUnits.ofType(UnitTypes.PEASANT) >= 1
 				&& (GameStateHelper.getKingdomIncome(kingdom)
@@ -333,10 +335,12 @@ public class BotAi {
 			kingdom.setSavings(kingdom.getSavings() - Unit.COST);
 			pickedUpUnits.addUnit(UnitTypes.SPEARMAN);
 			pickedUpUnits.removeUnit(UnitTypes.PEASANT);
+			GameStateHelper.addToCombatLog(gameState, gameState.getActivePlayer().getColorAsString() + " acquiring a spearman");
 			return true;
 		} else if (canKingdomSustainNewUnit(gameState, kingdom, pickedUpUnits, UnitTypes.SPEARMAN)) {
 			// buy 2 peasants = 1 spearman
 			buyUnitDirectly(kingdom, pickedUpUnits, UnitTypes.SPEARMAN);
+			GameStateHelper.addToCombatLog(gameState, gameState.getActivePlayer().getColorAsString() + " acquiring a spearman");
 			return true;
 		}
 		return false;
@@ -348,6 +352,7 @@ public class BotAi {
 			pickedUpUnits.removeUnit(UnitTypes.PEASANT);
 			pickedUpUnits.removeUnit(UnitTypes.SPEARMAN);
 			pickedUpUnits.addUnit(UnitTypes.KNIGHT);
+			GameStateHelper.addToCombatLog(gameState, gameState.getActivePlayer().getColorAsString() + " acquiring a knight");
 			return true;
 		} else if (pickedUpUnits.ofType(UnitTypes.SPEARMAN) >= 1
 				&& (GameStateHelper.getKingdomIncome(kingdom)
@@ -358,10 +363,12 @@ public class BotAi {
 			kingdom.setSavings(kingdom.getSavings() - Unit.COST);
 			pickedUpUnits.removeUnit(UnitTypes.SPEARMAN);
 			pickedUpUnits.addUnit(UnitTypes.KNIGHT);
+			GameStateHelper.addToCombatLog(gameState, gameState.getActivePlayer().getColorAsString() + " acquiring a knight");
 			return true;
 		} else if (canKingdomSustainNewUnit(gameState, kingdom, pickedUpUnits, UnitTypes.KNIGHT)) {
 			// buy 3 peasants = 1 knight
 			buyUnitDirectly(kingdom, pickedUpUnits, UnitTypes.KNIGHT);
+			GameStateHelper.addToCombatLog(gameState, gameState.getActivePlayer().getColorAsString() + " acquiring a knight");
 			return true;
 		}
 		return false;
@@ -374,6 +381,7 @@ public class BotAi {
 			pickedUpUnits.removeUnit(UnitTypes.PEASANT);
 			pickedUpUnits.removeUnit(UnitTypes.KNIGHT);
 			pickedUpUnits.addUnit(UnitTypes.BARON);
+			GameStateHelper.addToCombatLog(gameState, gameState.getActivePlayer().getColorAsString() + " acquiring a baron");
 			return true;
 		} else if (pickedUpUnits.ofType(UnitTypes.KNIGHT) >= 1
 				&& (GameStateHelper.getKingdomIncome(kingdom)
@@ -384,10 +392,12 @@ public class BotAi {
 			kingdom.setSavings(kingdom.getSavings() - Unit.COST);
 			pickedUpUnits.removeUnit(UnitTypes.KNIGHT);
 			pickedUpUnits.addUnit(UnitTypes.BARON);
+			GameStateHelper.addToCombatLog(gameState, gameState.getActivePlayer().getColorAsString() + " acquiring a baron");
 			return true;
 		} else if (canKingdomSustainNewUnit(gameState, kingdom, pickedUpUnits, UnitTypes.BARON)) {
 			// buy 4 peasants = 1 baron
 			buyUnitDirectly(kingdom, pickedUpUnits, UnitTypes.BARON);
+			GameStateHelper.addToCombatLog(gameState, gameState.getActivePlayer().getColorAsString() + " acquiring a baron");
 			return true;
 		}
 		return false;
@@ -697,6 +707,7 @@ public class BotAi {
 		if (nrAvailableUnits > 0) {
 			gameState.setHeldObject(new Unit(unitType));
 			GameStateHelper.conquer(gameState, tile);
+			GameStateHelper.addToCombatLog(gameState, gameState.getActivePlayer().getColorAsString() + " conquering " + tile.getPlayer().getColorAsString() + " tile " + tile.getPosition() + " with unit " + unitType.toString());
 			return true;
 		}
 		return false;

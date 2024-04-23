@@ -3,8 +3,9 @@
 package de.sesu8642.feudaltactics.ingame.ui;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 
 import javax.inject.Inject;
 
@@ -44,6 +45,7 @@ public class HudStage extends ResizableResettableStage {
 	private Table rootTable;
 	private Stack handStack;
 	private Label infoTextLabel;
+	private Label combatLog;
 	private Table handContentTable;
 	private Image handContent;
 	ImageButton undoButton;
@@ -54,8 +56,8 @@ public class HudStage extends ResizableResettableStage {
 	ImageButton skipButton;
 	ImageButton menuButton;
 	private Table bottomTable;
-	private List<ImageButton> playerTurnButtons = new ArrayList<>();
-	private List<ImageButton> enemyTurnButtons = new ArrayList<>();
+	private ArrayList<ImageButton> playerTurnButtons = new ArrayList<>();
+	private ArrayList<ImageButton> enemyTurnButtons = new ArrayList<>();
 
 	private boolean enemyTurnButtonsShown = false;
 
@@ -71,6 +73,7 @@ public class HudStage extends ResizableResettableStage {
 		super(viewport);
 		this.textureAtlas = textureAtlas;
 		this.skin = skin;
+
 		initUi();
 	}
 
@@ -123,12 +126,14 @@ public class HudStage extends ResizableResettableStage {
 		Image thumbImage = new Image(thumbSprite);
 		thumbImage.setColor(FeudalTactics.buttonIconColor);
 		infoTextLabel = new Label("", skin);
+		combatLog = new Label("", skin);
 
 		rootTable = new Table();
 		rootTable.setFillParent(true);
 		rootTable.add(infoTextLabel).left().top().pad(10);
-		rootTable.add(menuButton).right().size(ValueWithSize.percentSize(0.075F, rootTable)).pad(10);
+		rootTable.add(menuButton).right().size(ValueWithSize.percentSize(0.075F, rootTable)).pad(10).padRight(-100);
 		rootTable.row();
+		rootTable.add(combatLog).left().size(ValueWithSize.percentSize(0.075F, rootTable)).pad(10);
 		rootTable.add();
 		rootTable.add(handStack).right().size(ValueWithSize.percentSize(0.1F, rootTable));
 		rootTable.row();
@@ -220,6 +225,18 @@ public class HudStage extends ResizableResettableStage {
 
 	public void setInfoText(String newText) {
 		infoTextLabel.setText(newText);
+	}
+
+	public void setCombatLogText(Queue<String> log) {
+		String newText = "";
+		Queue<String> copyLog = new LinkedList<>(log);
+		
+		for (String text : copyLog) {
+			newText += ("\n" + text);
+		}
+		
+		combatLog.setFontScale(0.5f);
+		combatLog.setText(newText);
 	}
 
 	public void setFontScale(Float fontScale) {

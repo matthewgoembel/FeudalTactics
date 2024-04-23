@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Queue;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -99,6 +100,14 @@ public class GameStateHelper {
 
 		if (original.getSeed() != null) {
 			result.setSeed(original.getSeed());
+		}
+
+		if (original.getCombatLog() != null) {
+			result.setCombatLog(original.getCombatLog());
+		}
+
+		if (original.getCombatLogStageLog() != null) {
+			result.setCombatLogStageLog(original.getCombatLogStageLog());
 		}
 
 		result.setRound(original.getRound());
@@ -412,6 +421,7 @@ public class GameStateHelper {
 		gameState.setActiveKingdom(kingdom);
 	}
 
+
 	/**
 	 * Picks up an object.
 	 * 
@@ -472,6 +482,17 @@ public class GameStateHelper {
 		gameState.setHeldObject(newUnit);
 		placeObject(gameState, tile);
 	}
+
+
+	public static Kingdom getPlayerKingdom(GameState gameState, Player player) {
+        for (Kingdom kingdom : gameState.getKingdoms()) {
+            if (kingdom.getPlayer().equals(player)) {
+                return kingdom;
+            }
+        }
+        return null; // Or handle the case when no kingdom is found for the player
+    }
+
 
 	/**
 	 * Conquers an enemy tile.
@@ -578,6 +599,7 @@ public class GameStateHelper {
 		gameState.setHeldObject(null);
 	}
 
+	
 	private static void combineKingdoms(GameState gameState, Kingdom masterKingdom, Kingdom slaveKingdom) {
 		// master kingdom will determine the new capital
 		masterKingdom.setSavings(masterKingdom.getSavings() + slaveKingdom.getSavings());
@@ -842,6 +864,7 @@ public class GameStateHelper {
 	 */
 	public static void buyCastle(GameState gameState) {
 		gameState.getActiveKingdom().setSavings(gameState.getActiveKingdom().getSavings() - Castle.COST);
+		addToCombatLog(gameState, gameState.getActivePlayer().getColorAsString() + " buying a castle");
 		gameState.setHeldObject(new Castle());
 	}
 
@@ -973,6 +996,49 @@ public class GameStateHelper {
 			}
 		}
 		return false;
+	}
+
+    /**
+     * Determines whether a player's units are at risk due to negative salary.
+     * 
+     * @param gameState game state of the current game
+     * @param player    player attempting the action
+     * @return true if player's units are at risk, false otherwise
+     */
+    public static boolean arePlayerUnitsAtRisk(GameState gameState, Player player) {
+        Kingdom activeKingdom = gameState.getActiveKingdom();
+		int income = GameStateHelper.getKingdomIncome(activeKingdom);
+        int salaries = GameStateHelper.getKingdomSalaries(gameState, activeKingdom);
+        int result = income - salaries;
+        if (result < 0) {
+            return true;
+        }
+        return false;
+	}
+
+	/**
+	 * Adds combat-related moves performed by the player and bots to a combat log
+	 * 
+	 * @param gameState GameState to analyze
+	 * @param text text to be added to combat log
+	 */
+	public static void addToCombatLog(GameState gameState, String text) {
+		Queue<String> log1 = gameState.getCombatLog();
+		Queue<String> log2 = gameState.getCombatLogStageLog();
+		
+		log1.add(text);
+		log2.add(text);
+
+		if (log1.size() >= 9) {
+			log1.poll();
+		}
+
+		if (log2.size() >= 33) {
+			log2.poll();
+		}
+
+		gameState.setCombatLog(log1);
+		gameState.setCombatLogStageLog(log2);
 	}
 
 	/**
